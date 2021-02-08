@@ -1,0 +1,131 @@
+{
+	"variables": [],
+	"info": {
+		"name": "CRUD",
+		"_postman_id": "79b6afcf-cef0-919a-ee0a-7b653ca1f878",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "CreateUser",
+			"request": {
+				"url": "http://localhost:4321/createUser",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkbWluIiwiaWF0IjoxNjEyNTk4OTczfQ.yVvRnPRRD5RfwoJq9Q2xijDdo82QY_5MIGE8zLxoc2g",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\" :\"Admin\",\n\t\"age\" : 23,\n\t\"email\": \"mailID\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "ReadUser",
+			"request": {
+				"url": "http://localhost:4321/readUser",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkbWluIiwiaWF0IjoxNjEyNTk4MTEwfQ.0t3RSpJeolygItfdKcCK_XMCfY_m2I_tmMoDxm6VycI",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"filter\": {\n\t\t\"name\":\"Arun veera\"\n\t}\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"url": "http://localhost:4321/login",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\" :\"Admin\",\n\t\"password\" :\"password\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteUser",
+			"request": {
+				"url": "http://localhost:4321/deleteUser",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkbWluIiwiaWF0IjoxNjEyNTk4MTEwfQ.0t3RSpJeolygItfdKcCK_XMCfY_m2I_tmMoDxm6VycI",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"filter\": {\n\t\t\"name\":\"Admin\"\n\t}\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateUser",
+			"request": {
+				"url": "http://localhost:4321/updateUser",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkbWluIiwiaWF0IjoxNjEyNTk4MTEwfQ.0t3RSpJeolygItfdKcCK_XMCfY_m2I_tmMoDxm6VycI",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"filter\": {\n\t\t\"name\":\"Arun veera\"\n\t},\n\t\"name\": \"Admin\",\n    \"age\": 24,\n    \"email\": \"mailID\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

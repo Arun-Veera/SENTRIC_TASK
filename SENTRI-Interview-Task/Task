@@ -1,0 +1,347 @@
+/package.json
+------------
+{
+  "name": "sentri-interview-task",
+  "version": "1.0.0",
+  "description": "Interview Task",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.11.15"
+  }
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/index.js
+---------
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+let port = 4321;
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json());
+
+app.get('/', (req, res) =>{
+    res.json({"Name":"ArunVeera"})
+});
+
+require('./app/routes/router')(app);
+
+
+app.listen(port,()=>{
+    console.log("Express is started and running in the port " +port);
+});
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/app/routes/router.js
+---------------------
+
+module.exports =(app) =>{
+    const controller = require('../controller/controller');
+    
+    app.post('/login', controller.login)
+
+    app.post('/createUser', controller.create);
+
+    app.post('/readUser',controller.findOne);
+
+    app.post('/updateUser',controller.update);
+
+    app.post('/deleteUser',controller.delete);
+}
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+/app/config/database.config.js
+------------------------------
+
+module.exports = {
+    url:'mongodb://localhost:27017/LOCAL_DB'
+}
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/models/model.js
+---------------------
+const mongoose = require('mongoose');
+const dbConfig = require('../config/database.config');
+
+mongoose.connect(dbConfig.url,{
+    useNewUrlParser:true,
+    useUnifiedTopology: true 
+}).then(()=>{
+    console.log("DB connected");
+}).catch(err =>{
+    console.log('DB connection problem - ',err);
+    process.exit();
+})
+
+const userScheme = mongoose.Schema({
+    name :String,
+    age:Number,
+    email:String
+},{
+    timestamps:true
+});
+const adminScheme = mongoose.Schema({
+    name :String,
+    password:String,
+    token:String
+},{
+    timestamps:true
+});
+
+var login = mongoose.model('ADMIN',adminScheme);
+var user = mongoose.model('USERS',userScheme);
+module.exports = {
+    login:login,
+    user: user
+}
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+/app/controller/controller.js
+------------------------------
+const Model = require('../models/model');
+const middleWare = require('../middleware/jwt.auth');
+
+exports.login = (req, res) => {
+    if (req.body.name == 'Admin' && req.body.password == 'password') {
+        middleWare.checkUserAndjwtSign(req.body.name, token => {
+            const model = new Model.login({
+                name: req.body.name,
+                password: req.body.password,
+                token: token.accessToken
+            })
+            model.save().then(data => {
+                console.log("Login = ", data);
+                res.send(token);
+            }).catch(err => {
+                res.status(500).send({
+                    message: err.message || "Error in save data"
+                })
+            })
+        })
+    } else {
+        res.send('Username or password incorrect');
+    }
+}
+
+
+
+exports.create = (req, res) => {
+    const authKey = req.headers.authorization;
+    middleWare.verifyJWTToken(authKey, valid => {
+        if (valid.username == 'Admin') {
+            if (!req.body) {
+                return res.status(400).send({
+                    message: "Request body is empty"
+                });
+            }
+            const model = new Model.user({
+                name: req.body.name,
+                age: req.body.age,
+                email: req.body.email
+            });
+            model.save().then(data => {
+                console.log("data === >", data);
+                res.send(data);
+            }).catch(err => {
+                res.status(500).send({
+                    message: err.message || "Error in save data"
+                })
+            })
+        } else {
+            res.status(403).send({
+                message: "Forbidden"
+            })
+        }
+    })
+};
+
+exports.findOne = (req, res) => {
+    const authKey = req.headers.authorization;
+    middleWare.verifyJWTToken(authKey, valid => {
+        if (valid.username == 'Admin') {
+            Model.user.findOne(req.body.filter).then(resData => {
+                if (!resData) {
+                    return res.status(404).send({
+                        message: "Note not found with id " + JSON.stringify(req.body.filter)
+                    });
+                }
+                res.send(resData);
+            }).catch(err => {
+                res.status(500).send({
+                    message: err.message || "Error in retrieving data"
+                });
+            })
+
+        } else {
+            res.status(403).send({
+                message: "Forbidden"
+            })
+        }
+    })
+
+};
+
+exports.update = (req, res) => {
+    const authKey = req.headers.authorization;
+    middleWare.verifyJWTToken(authKey, valid => {
+        if (valid.username == 'Admin') {
+            Model.user.findOneAndUpdate(req.body.filter, {
+                name: req.body.name,
+                age: req.body.age,
+                email: req.body.email
+            }, { new: true }).then(resData => {
+                if (!resData) {
+                    return res.status(404).send({
+                        message: "Requested data not found" + JSON.stringify(req.body.filter)
+                    });
+                }
+                res.send(resData);
+            }).catch(err => {
+                return res.status(500).send({
+                    message: "error in updating data" + err
+                });
+            })
+        } else {
+            res.status(403).send({
+                message: "Forbidden"
+            })
+        }
+    })
+    if (!req.body) {
+        return res.status(400).send({
+            message: "Body is empty"
+        });
+    }
+
+};
+
+exports.delete = (req, res) => {
+    const authKey = req.headers.authorization;
+    middleWare.verifyJWTToken(authKey, valid => {
+        if (valid.username == 'Admin') {
+            Model.user.findOneAndDelete(req.body.filter).then(resData => {
+                if (!resData) {
+                    return res.status(404).send({
+                        message: "Requested data not found" + JSON.stringify(req.body.filter)
+                    });
+                }
+                res.send({ message: "Data deleted successfully" });
+            }).catch(err => {
+                return res.status(500).send({
+                    message: "Error in deleting data " + err
+                });
+            })
+        } else {
+            res.status(403).send({
+                message: "Forbidden"
+            })
+        }
+    });
+
+};
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+app/middleware/auth.config.js
+-------------------------------
+
+module.exports = {
+    accessToken :'SERVERSIDEDEFAULTACCESSTOKEN'
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+app/middleware/jwt.auth.js
+-----------------------------
+
+const jwt = require('jsonwebtoken')
+const configKey = require('./auth.config');
+
+exports.checkUserAndJWTSign = (name, res) => {
+    const accessToken = jwt.sign({ username: name }, configKey.accessToken);
+    res({
+        accessToken
+    })
+}
+
+exports.verifyJWTToken = (authHeader , res) => {
+    if (authHeader) {
+        jwt.verify(authHeader, configKey.accessToken, (err, user) => {
+            if (err) {
+                res(err);
+            }
+            res(user);
+        });
+    } else {
+        res(`Error in ${authHeader}`);
+    }
+}
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+Request URL 
+----------
+1. Login 
+	URL : http://localhost:4321/login
+	Body : {
+	"name" :"Admin",
+	"password" :"password"
+} 
+2. Create User
+	URL : http://localhost:4321/createUser
+	Header : 
+	Authorization : {pass the token response while requesting Login Api }
+	Body :{
+	"name" :"Veera",
+	"age" : 25,
+	"email": "mailID"
+}
+3. Read User
+URL : http://localhost:4321/readUser
+	Header : 
+	Authorization : {pass the token response while requesting Login Api }
+	Body :{
+	"filter": {
+		"name":"Veera"
+	}
+}
+
+4. Update User
+URL : http://localhost:4321/updateUser
+	Header : 
+	Authorization : {pass the token response while requesting Login Api }
+	Body :{
+	"filter": {
+		"name":"Veera"
+	},
+	"name": "Arun Veera",
+    "age": 24,
+    "email": "mailID"
+}
+5. Delete User
+URL : http://localhost:4321/deleteUser
+	Header : 
+	Authorization : {pass the token response while requesting Login Api }
+	Body :{
+	"filter": {
+		"name":"Veera"
+	}
+}
+
+
+=========================================================THANK YOU================================================
